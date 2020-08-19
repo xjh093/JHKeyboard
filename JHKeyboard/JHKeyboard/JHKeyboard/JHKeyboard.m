@@ -30,7 +30,8 @@
 @interface JHKeyboard()
 @property (nonatomic,    weak) UITextView *textView;
 @property (nonatomic,    weak) UITextField *textField;
-@property (nonatomic,  assign) BOOL  active;
+@property (nonatomic,  assign) BOOL  textViewIsActive;
+@property (nonatomic,  assign) BOOL  textFieldIsActive;
 @end
 
 @implementation JHKeyboard
@@ -65,10 +66,29 @@
     UIViewAnimationCurve curve = [userInfo[UIKeyboardAnimationCurveUserInfoKey] integerValue];
     
     if (_changeBlock) {
-        if (_textView.isFirstResponder) {
-            _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
-        }else if (_textField.isFirstResponder) {
-            _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
+        NSNotificationName name = noti.name;
+        if ([name isEqualToString:UIKeyboardWillShowNotification] || [name isEqualToString:UIKeyboardDidShowNotification]){
+            if (_textView.isFirstResponder) {
+                _textViewIsActive = YES;
+                _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
+            }else if (_textField.isFirstResponder) {
+                _textFieldIsActive = YES;
+                _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
+            }
+        }else{
+            if (_textViewIsActive) {
+                if ([name isEqualToString:UIKeyboardDidHideNotification]) {
+                    _textViewIsActive = NO;
+                }
+                
+                _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
+            }else if (_textFieldIsActive) {
+                if ([name isEqualToString:UIKeyboardDidHideNotification]) {
+                    _textFieldIsActive = NO;
+                }
+                
+                _changeBlock(noti.name, beginFrame, endFrame, duration, curve);
+            }
         }
     }
 }
